@@ -17,36 +17,19 @@ class todo
 	/** загрузка списка todo */
 	private function load()
 	{
-		$this->list = array(0,
-			array(
-				't' => time(),
-				'm' => 'Тестовая туду',
-				's' => 'TODO',
-				'h' => '',
-				'v' => '',
-			),
-			array(
-				't' => time(),
-				'm' => 'Тестовая туду2',
-				's' => 'TODO',
-				'h' => '',
-				'v' => '',
-			),
-			array(
-				't' => time(),
-				'm' => 'Первый баг',
-				's' => 'BUG',
-				'h' => '',
-				'v' => '',
-			),
-			array(
-				't' => time(),
-				'm' => 'Тестовая туду3',
-				's' => 'TODO',
-				'h' => '',
-				'v' => '',
-			),
-		);
+		$file = @file_get_contents($fname = $this->file);
+
+		$file = preg_replace('/({|, )([a-z]+):/', '$1"$2$3":', $file);
+		$file = json_decode("[$file 0]", TRUE);
+		array_pop($file);
+
+		// обрабатываем массив
+		$this->list = array(0);
+		for ($i = 0; $i < count($file); $i++)
+		if (!isset($this->list[$file[$i]['id']]))
+			$this->list[$file[$i]['id']] = $file[$i];
+		else
+			$this->list[$file[$i]['id']]['s'] = $file[$i]['s'];
 	}
 	/** сохранение записи на диск */
 	private function save($a)
@@ -65,22 +48,31 @@ class todo
 		if (!@file_put_contents($fname = $this->file, '{'."$time$params},\n", FILE_APPEND))
 			throw new Exception("Cannot write to file '$fname'");
 	}
+	/** максимальный идентификатор записи */
+	private function getMaxId()
+	{
+		$id = 0;
+		for ($i = 1; $i < count($this->list); $i++)
+			if ($this->list[$i]['id'] > $id) $id = $this->list[$i]['id'];
+		return $id;
+	}
 
 	// PUBLIC
 	/** отображение списка тудушек */
 	public function show()
 	{
+		if (!count($this->list)) echo "No todo found\n";
 		for ($i = 1; $i < count($this->list); $i++)
-		if ($this->list[$i]['s'] != 'FIX' || $this->list[$i]['s'] != 'DONE')
+		if (isset($this->list[$i]['s']) && $this->list[$i]['s'] != 'FIX' && $this->list[$i]['s'] != 'DONE')
 		{
-			printf("%5s #%2d %s\n", $this->list[$i]['s'], $i, $this->list[$i]['m']);
+			printf("%5s #%2d %s\n", $this->list[$i]['s'], $this->list[$i]['id'], $this->list[$i]['m']);
 		}
 	}
 	/** добавление новой туду */
 	public function add($a)
 	{
 		if (!isset($a['m'])) throw new Exception("empty message");
-		$a['id'] = count($this->list);
+		$a['id'] = $this->getMaxId() + 1;
 		$this->list[] = $a;
 		$this->save($a);
 		return $a['id'];
@@ -120,30 +112,30 @@ Examples:
 	}
 }
 
-// наши тудушки
-$todo = new todo();
-
 // параметры командной строки
 $argv = $_SERVER['argv'];
 if (count($argv) == 1) $argv[1] = 'list';
 
 // парсим ключи
-$params = array();
+$params = array('s' => 'TODO');
 for ($i = 0; $i < count($argv); $i++)
 if ($argv[$i][0] == '-')
 {
-	$params[substr($argv[$i], 1)] = $argv[$i+1];
+	$params[substr($argv[$i], 1)] = @$argv[$i + 1];
 	$i++;
 }
 
 try {
+	// наши тудушки
+	$todo = new todo();
+
 	// запускаем команду
 	switch ($argv[1])
 	{
 		case 'list':  $todo->show(); break;
-		case 'add':   $n = $todo->add($params);   echo "#$n added\n"; break;
-		case 'done':  $n = $todo->done($id = $argv[2]);        echo "#$id done\n";  break;
-		case 'fix':   $n = $todo->done($id = $argv[2], 'FIX'); echo "#$id fixed\n"; break;
+		case 'add':   $n = $todo->add($params);                     echo "#$n added\n"; break;
+		case 'done':  $n = $todo->done($id = (int)$argv[2]);        echo "#$id done\n";  break;
+		case 'fix':   $n = $todo->done($id = (int)$argv[2], 'FIX'); echo "#$id fixed\n"; break;
 		default: $todo->help();
 	}
 }
