@@ -5,15 +5,28 @@ class todo
 {
 	// PRIVATE
 	private $params = array(); // параметры командной строки
-	private $file   = '_1';
+	private $file   = 'todo';
 
 	// PUBLIC
 	public function __construct()
 	{
+		$this->file = $this->findTodoFile();
 		$this->load();
 	}
 
 	// PRIVATE
+	/** поиск файла с тудушками */
+	private function findTodoFile()
+	{
+		$path = $path_orig = getcwd();
+		while (!file_exists($p = "$path/todo"))
+		{
+			if (file_exists("$path/.git")) break;
+			if ($path == '') { $p = "$path_orig/todo"; break; }
+			$path = preg_replace('/\/[^\/]+$/', '', $path);
+		}
+		return $p;
+	}
 	/** загрузка списка todo */
 	private function load()
 	{
