@@ -47,7 +47,7 @@ class todo
 	/** сохранение записи на диск */
 	private function save($a)
 	{
-		if (!isset($a['t'])) $a['t'] = time();
+		$a['t'] = time();
 		$time = date('\d:"d.m.y"', $a['t']);
 		$id   = $a['id'];
 
