@@ -1,6 +1,10 @@
 #!/usr/bin/php
 <?php
-
+/**
+ * @dateModify 06.09.10
+ * @version    0.6
+ * @author     CupIvan <mail@cupivan.ru>
+ */
 class todo
 {
 	// PRIVATE
@@ -86,6 +90,7 @@ class todo
 	{
 		if (!isset($a['m'])) throw new Exception("empty message");
 		$a['id'] = $this->getMaxId() + 1;
+		$a['s']  = strtoupper($a['s']);
 		$this->list[] = $a;
 		$this->save($a);
 		return $a['id'];
@@ -97,6 +102,7 @@ class todo
 		$s = $this->list[$id]['s'];
 		if (($s == 'TODO' && $state != 'DONE') ||
 			($s == 'BUG'  && $state != 'FIX')) throw new Exception("#$id cannot change state $s to $state");
+		if ($state == $this->list[$id]['s']) throw new Exception("#$id already $state");
 		$this->save(array('id' => $id, 's' => $state, 'm' => $this->list[$id]['s']." -> $state"));
 		return $id;
 	}
