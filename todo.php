@@ -2,7 +2,7 @@
 <?php
 /**
  * @dateModify 07.09.10
- * @version    0.7
+ * @version    0.8
  * @author     CupIvan <mail@cupivan.ru>
  */
 class todo
