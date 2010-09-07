@@ -1,8 +1,8 @@
 #!/usr/bin/php
 <?php
 /**
- * @dateModify 06.09.10
- * @version    0.6
+ * @dateModify 07.09.10
+ * @version    0.7
  * @author     CupIvan <mail@cupivan.ru>
  */
 class todo
@@ -143,6 +143,8 @@ if ($argv[$i][0] == '-')
 	$params[substr($argv[$i], 1)] = @$argv[$i + 1];
 	$i++;
 }
+// заменяем ключ -t на -s
+if (isset($params['t'])) $params['s'] = $params['t'];
 
 try {
 	// наши тудушки
@@ -162,3 +164,4 @@ catch (Exception $e)
 {
 	echo "ERROR! ".$e->getMessage()."\n";
 }
+
