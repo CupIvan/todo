@@ -1,7 +1,7 @@
 <?php
 /**
  * @dateModify 11.09.10
- * @version    0.10
+ * @version    1.0
  * @author     CupIvan <mail@cupivan.ru>
  */
 class todo
@@ -35,7 +35,7 @@ class todo
 	{
 		$file = @file_get_contents($fname = $this->file);
 
-		$file = preg_replace('/({|, )([a-z]+):/', '$1"$2$3":', $file);
+		$file = preg_replace('/({|, )([a-z0-9]+):/', '$1"$2$3":', $file);
 		$file = json_decode("[$file 0]", TRUE);
 		array_pop($file);
 
@@ -95,9 +95,9 @@ class todo
 		return $a['id'];
 	}
 	/** изменение тудушки */
-	public function edit($id, $a)
+	public function edit($a)
 	{
-		$a['id'] = (int)$id; $n = -1;
+		$a['id'] = (int)$a['id']; $n = -1;
 		for ($i = 0; $i < count($this->list); $i++)
 			if ($this->list[$i]['id'] == $a['id']) $n = $i;
 		if ($n < 0) throw new Exception("todo #$id not found");
@@ -113,7 +113,17 @@ class todo
 		if (($s == 'TODO' && $state != 'DONE') ||
 			($s == 'BUG'  && $state != 'FIX')) throw new Exception("#$id cannot change state $s to $state");
 		if ($state == $this->list[$id]['s'])   throw new Exception("#$id already $state");
-		$this->save(array('id' => $id, 's' => $state, 'm' => $this->list[$id]['s']." -> $state"));
+		$this->save(array('id' => $id, 's' => $state);
 		return $id;
+	}
+	/** поиск тудушки */
+	public function get($id)
+	{
+		$res = array();
+		for ($i = 0; $i < count($this->list); $i++)
+			if ($this->list[$i]['id'] == $id)
+				foreach ($this->list[$i] as $k => $v)
+					$res[$k] = $v;
+		return $res;
 	}
 }

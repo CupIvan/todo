@@ -1,6 +1,6 @@
 	/**
  * @dateModify 11.09.10
- * @version    0.2
+ * @version    0.3
  * @author CupIvan <mail@cupivan.ru>
  */
 var todo = {}
@@ -87,19 +87,18 @@ todo.load = function(link)
 {
 	ajax.load(todo.src+'todo?'+time(), function(x)
 	{
-		var i, t = [0], res = eval(st = '(['+x+''+0+'])');
+		var i, j, t = [0], res = eval(st = '(['+x+''+0+'])');
 		// формируем массив тудушек
 		for (i = 0; i < res.length - 1; i++)
 		if (t[res[i].id] == undefined)
 		{
 			t[res[i].id]    = res[i];
-			t[res[i].id].n1 = 37;
-			t[res[i].id].n2 = 4;
+			t[res[i].id].n1 = res[i].n1 ? res[i].n1 : 0;
+			t[res[i].id].n2 = res[i].n2 ? res[i].n2 : 0;
 		} else
 		{
-			t[res[i].id].d = res[i].d;
-			t[res[i].id].s = res[i].s;
-			t[res[i].id].v = res[i].v;
+			for (j in res[i])
+				t[res[i].id][j] = res[i][j];
 		}
 		todo.list = t;
 		if (!link) link = $$('.todoTypes a')[0];
@@ -119,8 +118,8 @@ todo.showTable = function(link)
 		vote2 = 'против ' + todo.list[i].n2;
 		if (link.href.indexOf('#completed') == -1)
 		{
-			vote1 = '<a href="#vote" onclick="return todo.sendVote('+i+',  1, this)" title="Голосовать за">'+vote1+'</a>';
-			vote2 = '<a href="#vote" onclick="return todo.sendVote('+i+', -1, this)" title="Голосовать против">'+vote2+'</a>';
+			vote1 = '<a href="#vote" onclick="return todo.sendVote('+i+', \'n1\', this)" title="Голосовать за">'+vote1+'</a>';
+			vote2 = '<a href="#vote" onclick="return todo.sendVote('+i+', \'n2\', this)" title="Голосовать против">'+vote2+'</a>';
 		}
 		st += '<tr>'+
 			'<td><span class="vote">'+ vote1 + '<br/>' + vote2 + '</span></td>'+
@@ -157,8 +156,9 @@ todo.sendVote = function(id, vote, link)
 {
 	// TODO: два раза голосовать нельзя!
 	var post = 'action=vote&id=' + id + '&vote=' + vote;
-	ajax.load(todo.action, post, function(){
-		link.innerHTML = link.innerHTML.replace(/(\d+)/, function(x){ return parseInt(x) + 1; });
+	ajax.load(todo.action, post, function(x){
+		todo.list[id][vote] = x;
+		link.innerHTML = link.innerHTML.replace(/(\d+)/, x);
 	});
 	return false;
 }

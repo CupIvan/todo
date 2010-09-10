@@ -3,7 +3,9 @@ if (!isset($_POST['action'])) exit;
 
 switch ($_GET['site'])
 {
-	case 'si': chdir('../sadowajaimperija/'); break;
+	case 'si':    chdir('../sadowajaimperija/'); break;
+	case 'mff':   chdir('../myfreefarm/');       break;
+	case 'kupon': chdir('../kupon/');            break;
 	default: exit;
 }
 
@@ -12,7 +14,8 @@ $todo = new todo();
 
 $params = $_POST;
 unset($params['action']);
-$params['m'] = urldecode($params['m']);
+if (isset($params['m']))
+	$params['m'] = urldecode($params['m']);
 
 switch($_POST['action'])
 {
@@ -20,6 +23,10 @@ switch($_POST['action'])
 		$todo->add($params);
 		break;
 	case 'vote':
-		$todo->edit($_POST['id'], $params);
+		$id = $_POST['id'];
+		$nn = $_POST['vote'];
+		$t = $todo->get($id);
+		$todo->edit(array('id' => $_POST['id'], $nn => $n = $t[$nn] + 1));
+		echo $n;
 		break;
 }
