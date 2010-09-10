@@ -1,9 +1,10 @@
-/**
- * @dateModify 07.09.10
- * @version    0.1
+	/**
+ * @dateModify 11.09.10
+ * @version    0.2
  * @author CupIvan <mail@cupivan.ru>
  */
 var todo = {}
+var todo_types = { 'tasks': 'IDEA|TODO', 'bugs': 'PROBLEM|BUG', 'completed': 'DONE|FIX' };
 
 /** инициализация */
 todo.init = function(cfg_)
@@ -13,6 +14,8 @@ todo.init = function(cfg_)
 	for (i in cfg_) cfg[i] = cfg_[i];
 	cfg.side = (cfg.side == 'right') ? 'left: 100%; margin-left: -22px' : 'left: 0';
 	todo.src = cfg.src;
+	if (!cfg.action) cfg.action = todo.src + 'todo_html.php';
+	todo.action = cfg.action;
 
 	// создаем HTML-код таба и формы
 	var div = document.createElement('DIV');
@@ -51,17 +54,17 @@ todo.init = function(cfg_)
 <a href="#showWindow" onclick="return todo.togle()" class="tab"></a>
 <div id="todoWindow">
 	<a href="#close" onclick="return todo.togle()" title="Закрыть" class="close">x</a>
-	<form>
-		<label><input name="type" type="radio" value="bug" checked="checked" />Ошибка</label>
-		<label><input name="type" type="radio" value="idea" />Предложение</label>
+	<form onsubmit="return todo.sendTodo(this)">
+		<label><input name="type" type="radio" value="PROBLEM" checked="checked" />Ошибка</label>
+		<label><input name="type" type="radio" value="IDEA" />Предложение</label>
 		<br/>
 		<input name="text" class="text" />
 		<input value="Добавить" type="submit" />
 	</form>
 	<div class="todoTypes">
-		<a href="#tasks"     onclick="return todo.showTable('IDEA|TODO', this)">Предложения</a>
-		<a href="#bugs"      onclick="return todo.showTable('BUG', this)">Ошибки</a>
-		<a href="#completed" onclick="return todo.showTable('DONE|FIX', this)">Выполненные</a>
+		<a href="#tasks"     onclick="return todo.showTable(this)">Предложения</a>
+		<a href="#bugs"      onclick="return todo.showTable(this)">Ошибки</a>
+		<a href="#completed" onclick="return todo.showTable(this)">Выполненные</a>
 	</div>
 	<div id="todoTable"></div>
 </div>
@@ -80,9 +83,9 @@ todo.togle = function()
 }
 
 /** загрузка тудушек */
-todo.load = function()
+todo.load = function(link)
 {
-	ajax.load(todo.src, function(x)
+	ajax.load(todo.src+'todo?'+time(), function(x)
 	{
 		var i, t = [0], res = eval(st = '(['+x+''+0+'])');
 		// формируем массив тудушек
@@ -99,26 +102,15 @@ todo.load = function()
 			t[res[i].id].v = res[i].v;
 		}
 		todo.list = t;
-		todo.showTasks($('.todoTypes')[0].getElementsByTagName('a')[0]);
+		if (!link) link = $$('.todoTypes a')[0];
+		todo.showTable(link);
 	});
 }
 
-/** отображение задач */
-todo.showTasks = function(x)
-{
-	return todo.showTable('IDEA|TODO', x);
-}
-
-/** отображение завершенных */
-todo.showCompleted = function(x)
-{
-	return todo.showTable('DONE|FIX', x);
-}
-
 /** отображение таблицы */
-todo.showTable = function(status, link)
+todo.showTable = function(link)
 {
-	var i, vote1, vote2, st = '';
+	var i, vote1, vote2, st = '', status = todo_types[link.href.replace(/.+#/, '')];
 	st += '<table>';
 	for (i = 1; i < todo.list.length; i++)
 	if (status.indexOf(todo.list[i].s) != -1)
@@ -127,8 +119,8 @@ todo.showTable = function(status, link)
 		vote2 = 'против ' + todo.list[i].n2;
 		if (link.href.indexOf('#completed') == -1)
 		{
-			vote1 = '<a href="#vote" onclick="todo.vote('+i+')" title="Голосовать за">'+vote1+'</a>';
-			vote2 = '<a href="#vote" onclick="todo.vote('+i+')" title="Голосовать против">'+vote2+'</a>';
+			vote1 = '<a href="#vote" onclick="return todo.sendVote('+i+',  1, this)" title="Голосовать за">'+vote1+'</a>';
+			vote2 = '<a href="#vote" onclick="return todo.sendVote('+i+', -1, this)" title="Голосовать против">'+vote2+'</a>';
 		}
 		st += '<tr>'+
 			'<td><span class="vote">'+ vote1 + '<br/>' + vote2 + '</span></td>'+
@@ -147,8 +139,57 @@ todo.showTable = function(status, link)
 	return false;
 }
 
+/** отправка тудушки */
+todo.sendTodo = function(form)
+{
+	var s, post = 'action=add' +
+		'&s=' + (s = (form.type[0].checked ? form.type[0].value : form.type[1].value)) +
+		'&m=' + encodeURIComponent(form.text.value);
+	ajax.load(todo.action, post, function() {
+		setTimeout(function(){ todo.load($$('.todoTypes a')[s=='PROBLEM'?1:0]); }, 3000);
+	});
+	$('todoTable', 'Ваше мнение принято. Спасибо за участие!');
+	return false;
+}
+
+/** отправка голоса */
+todo.sendVote = function(id, vote, link)
+{
+	// TODO: два раза голосовать нельзя!
+	var post = 'action=vote&id=' + id + '&vote=' + vote;
+	ajax.load(todo.action, post, function(){
+		link.innerHTML = link.innerHTML.replace(/(\d+)/, function(x){ return parseInt(x) + 1; });
+	});
+	return false;
+}
 
 // ---------- + ---------- БИБЛИОТЕЧНЫЕ ФУНКЦИИ ---------- + ---------- //
+/** поиск элементов в dom
+ * @return array
+ */
+function $$(st) // $$("#id .class tag")
+{
+	var i, j, k, els = [document], els_, e;
+	st = st.split(' ');
+	for (i = 0; i < st.length; i++)
+	{
+		els_ = [];
+		for (j = 0; j < els.length; j++)
+		{
+			if (st[i][0] == '#')
+				e = els[j].getElementById(st[i].replace(/./, ''));
+			else
+			if (st[i][0] == '.')
+				e = els[j].getElementsByClassName(st[i].replace(/./, ''));
+			else
+				e = els[j].getElementsByTagName(st[i]);
+			for (k = 0; k < e.length; k++)
+			els_.push(e[k]);
+		}
+		els = [].concat(els_);
+	}
+	return els;
+}
 /** поиск элемента / установка и замена текста */
 function $(id, txt)
 {

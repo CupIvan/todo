@@ -1,8 +1,7 @@
-#!/usr/bin/php
 <?php
 /**
- * @dateModify 07.09.10
- * @version    0.9
+ * @dateModify 11.09.10
+ * @version    0.10
  * @author     CupIvan <mail@cupivan.ru>
  */
 class todo
@@ -46,23 +45,23 @@ class todo
 		if (!isset($this->list[$file[$i]['id']]))
 			$this->list[$file[$i]['id']] = $file[$i];
 		else
-			$this->list[$file[$i]['id']]['s'] = $file[$i]['s'];
+		foreach ($file[$i] as $k => $v)
+		{
+			$this->list[$file[$i]['id']][$k] = $v;
+		}
 	}
 	/** сохранение записи на диск */
 	private function save($a)
 	{
 		$a['t'] = time();
-		$time = date('\d:"d.m.y"', $a['t']);
-		$id   = $a['id'];
-
-		$params = '';
+		$params = ''; $time = date('d.m.y');
 		foreach ($a as $k => $v)
 		{
 			if (is_string($v) == 'string') $v = '"'.str_replace('"', '\"', $v).'"';
 			$params .= ", $k:$v";
 		}
 
-		if (!@file_put_contents($fname = $this->file, '{'."$time$params},\n", FILE_APPEND))
+		if (!@file_put_contents($fname = $this->file, "{d:\"$time\"$params},\n", FILE_APPEND))
 			throw new Exception("Cannot write to file '$fname'");
 	}
 	/** максимальный идентификатор записи */
@@ -90,7 +89,18 @@ class todo
 	{
 		if (!isset($a['m'])) throw new Exception("empty message");
 		$a['id'] = $this->getMaxId() + 1;
-		$a['s']  = strtoupper($a['s']);
+		$a['s']  = isset($a['s']) ? strtoupper($a['s']) : 'IDEA';
+		$this->list[] = $a;
+		$this->save($a);
+		return $a['id'];
+	}
+	/** изменение тудушки */
+	public function edit($id, $a)
+	{
+		$a['id'] = (int)$id; $n = -1;
+		for ($i = 0; $i < count($this->list); $i++)
+			if ($this->list[$i]['id'] == $a['id']) $n = $i;
+		if ($n < 0) throw new Exception("todo #$id not found");
 		$this->list[] = $a;
 		$this->save($a);
 		return $a['id'];
@@ -102,66 +112,8 @@ class todo
 		$s = $this->list[$id]['s'];
 		if (($s == 'TODO' && $state != 'DONE') ||
 			($s == 'BUG'  && $state != 'FIX')) throw new Exception("#$id cannot change state $s to $state");
-		if ($state == $this->list[$id]['s']) throw new Exception("#$id already $state");
+		if ($state == $this->list[$id]['s'])   throw new Exception("#$id already $state");
 		$this->save(array('id' => $id, 's' => $state, 'm' => $this->list[$id]['s']." -> $state"));
 		return $id;
 	}
-	/** помощь по командам */
-	public function help()
-	{ echo
-"Usage: todo [CMD] [-m TEXT] [-t TYPE]
-Commands:
-  no_command    - write all todo
-  add           - add one item
-  bugs          - write all bugs
-  link N1 to N2 - link todo (N1) to target (N2)
-  --help        - write this help
-Keys:
-  -m - text of todo
-  -t - type of todo: todo (default), done, bug, fix, message
-  -a - add todo file
-Examples:
-  todo add -m 'To do someting'
-  todo done 1
-  todo add -t bug -m 'Something wrong'
-  todo fix 1 -m 'something fixed'
-  todo add -t bug -m 'Something wrong2'
-  todo link 3 to 2
-";
-	}
 }
-
-// параметры командной строки
-$argv = $_SERVER['argv'];
-if (count($argv) == 1) $argv[1] = 'list';
-
-// парсим ключи
-$params = array('s' => 'TODO');
-for ($i = 0; $i < count($argv); $i++)
-if ($argv[$i][0] == '-')
-{
-	$params[substr($argv[$i], 1)] = @$argv[$i + 1];
-	$i++;
-}
-// заменяем ключ -t на -s
-if (isset($params['t'])) $params['s'] = $params['t'];
-
-try {
-	// наши тудушки
-	$todo = new todo();
-
-	// запускаем команду
-	switch ($argv[1])
-	{
-		case 'list':  $todo->show(); break;
-		case 'add':   $n = $todo->add($params);                     echo "#$n added\n"; break;
-		case 'done':  $n = $todo->done($id = (int)$argv[2]);        echo "#$id done\n";  break;
-		case 'fix':   $n = $todo->done($id = (int)$argv[2], 'FIX'); echo "#$id fixed\n"; break;
-		default: $todo->help();
-	}
-}
-catch (Exception $e)
-{
-	echo "ERROR! ".$e->getMessage()."\n";
-}
-
