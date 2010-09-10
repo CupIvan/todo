@@ -1,7 +1,7 @@
 <?php
 /**
  * @dateModify 11.09.10
- * @version    1.0
+ * @version    1.1
  * @author     CupIvan <mail@cupivan.ru>
  */
 class todo
@@ -113,7 +113,7 @@ class todo
 		if (($s == 'TODO' && $state != 'DONE') ||
 			($s == 'BUG'  && $state != 'FIX')) throw new Exception("#$id cannot change state $s to $state");
 		if ($state == $this->list[$id]['s'])   throw new Exception("#$id already $state");
-		$this->save(array('id' => $id, 's' => $state);
+		$this->save(array('id' => $id, 's' => $state));
 		return $id;
 	}
 	/** поиск тудушки */
