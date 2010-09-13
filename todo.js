@@ -1,6 +1,6 @@
 	/**
- * @dateModify 11.09.10
- * @version    0.3
+ * @dateModify 13.09.10
+ * @version    1.0
  * @author CupIvan <mail@cupivan.ru>
  */
 var todo = {}
@@ -10,12 +10,13 @@ var todo_types = { 'tasks': 'IDEA|TODO', 'bugs': 'PROBLEM|BUG', 'completed': 'DO
 todo.init = function(cfg_)
 {
 	// настройки
-	var i, cfg = { color: '#FFA000', offsetBottom: '300px', side: 'left', border: 'auto' };
+	var i, cfg = { color: '#FFA000', offsetBottom: '300px', side: 'left', border: 'auto', params: {} };
 	for (i in cfg_) cfg[i] = cfg_[i];
 	cfg.side = (cfg.side == 'right') ? 'left: 100%; margin-left: -22px' : 'left: 0';
 	todo.src = cfg.src;
 	if (!cfg.action) cfg.action = todo.src + 'todo_html.php';
 	todo.action = cfg.action;
+	todo.params = cfg.params;
 
 	// создаем HTML-код таба и формы
 	var div = document.createElement('DIV');
@@ -29,7 +30,7 @@ todo.init = function(cfg_)
 		background: cfg.color URL('http://cupivan.su/todo/tab.png');
 	}
 	#todoWindow {
-		position: fixed; left: 50%; top: 50%; margin-left: -400px; margin-top: -250px;
+		position: fixed; left: 50%; top: 50%; margin-left: -400px; margin-top: -250px; z-index: 999;
 		width: 800px; height: 500px; scroll; padding: 20px;
 		background: #FFF;
 		border: 2px solid #FFA000;
@@ -71,7 +72,7 @@ todo.init = function(cfg_)
 ]]></r>;
 	for (i in cfg) div.innerHTML = div.innerHTML.replace('cfg.'+i, cfg[i]);
 	$().appendChild(div);
-//	todo.togle(); // скрываем
+	todo.togle(); // скрываем
 	todo.load();
 }
 
@@ -87,9 +88,15 @@ todo.load = function(link)
 {
 	ajax.load(todo.src+'todo?'+time(), function(x)
 	{
-		var i, j, t = [0], res = eval(st = '(['+x+''+0+'])');
+		var i, j, t = [0], res;
+		if (typeof(x) == 'string')
+		{
+			res = x.replace(/^_\(/gm,'').replace(/\)$/gm,',');
+			res = eval('['+res+' 0]');
+			res.pop();
+		} else res = x;
 		// формируем массив тудушек
-		for (i = 0; i < res.length - 1; i++)
+		for (i = 0; i < res.length; i++)
 		if (t[res[i].id] == undefined)
 		{
 			t[res[i].id]    = res[i];
@@ -104,6 +111,15 @@ todo.load = function(link)
 		if (!link) link = $$('.todoTypes a')[0];
 		todo.showTable(link);
 	});
+}
+
+/** дополнительные параметры */
+todo.getParams = function()
+{
+	var i, st = '';
+	for (i in todo.params)
+		st += todo.params[i] == '' ? '&' + i : '&' + i + '=' + todo.params[i];
+	return st;
 }
 
 /** отображение таблицы */
@@ -124,10 +140,11 @@ todo.showTable = function(link)
 		st += '<tr>'+
 			'<td><span class="vote">'+ vote1 + '<br/>' + vote2 + '</span></td>'+
 			'<td>#'+todo.list[i].id+'</td>'+
-			'<td class="l">' +todo.list[i].m +'</td>'+
-			'<td>' +(todo.list[i].v?'v'+todo.list[i].v+'<br/>':'')+todo.list[i].d+
-				('TODO|BUG'.indexOf(todo.list[i].s ) != -1 ? '<br/>делаю' : '')+
-				'</td>'+
+			'<td class="l">'+todo.list[i].m.replace(/</g, '&lt;').replace(/>/g, '&gt;')+'</td>'+
+			'<td>'+(todo.list[i].v ? 'v'+todo.list[i].v+'<br/>' : '') +
+				todo.list[i].d +
+				('TODO|BUG'.indexOf(todo.list[i].s) != -1 ? '<br/>принято' : '') +
+			'</td>'+
 		'</tr>';
 	}
 	st += '</table>';
@@ -143,7 +160,7 @@ todo.sendTodo = function(form)
 {
 	var s, post = 'action=add' +
 		'&s=' + (s = (form.type[0].checked ? form.type[0].value : form.type[1].value)) +
-		'&m=' + encodeURIComponent(form.text.value);
+		'&m=' + encodeURIComponent(form.text.value) + todo.getParams();
 	ajax.load(todo.action, post, function() {
 		setTimeout(function(){ todo.load($$('.todoTypes a')[s=='PROBLEM'?1:0]); }, 3000);
 	});
@@ -155,7 +172,7 @@ todo.sendTodo = function(form)
 todo.sendVote = function(id, vote, link)
 {
 	// TODO: два раза голосовать нельзя!
-	var post = 'action=vote&id=' + id + '&vote=' + vote;
+	var post = 'action=vote&id=' + id + '&vote=' + vote + todo.getParams();
 	ajax.load(todo.action, post, function(x){
 		todo.list[id][vote] = x;
 		link.innerHTML = link.innerHTML.replace(/(\d+)/, x);
@@ -212,16 +229,38 @@ function $(id, txt)
 	}
 	obj.innerHTML = st;
 }
+/** текущее время в секундах */
+function time() { return Math.round((new Date()).getTime() / 1000); }
 /** подгрузка страниц */
 var ajax = {
 	load: function(url, post, handler)
 	{
-		var ajax = new XMLHttpRequest();
 		if (typeof(post) == 'function')
 		{
 			handler = post;
 			post = undefined;
 		}
+		// XML используем только на своем домене
+		if (this.domain(document.location) == this.domain(url))
+			this.loadAjax(url, post, handler);
+		else
+		{
+			if (post == undefined)
+				this.loadJS(url, handler);
+			else
+				this.formSend(url, post, handler);
+		}
+	},
+	/** выделение домена из URL */
+	domain: function(url)
+	{
+		var d = (''+url).replace(/http:\/\/([^\/]+).*/, '$1');
+		return d;
+	},
+	/** загрузка средствами XMLHttpRequest */
+	loadAjax: function(url, post, handler)
+	{
+		var ajax = new XMLHttpRequest();
 		ajax.open(post != undefined ? 'POST' : 'GET', url);
 		ajax.onreadystatechange = function()
 		{
@@ -230,7 +269,57 @@ var ajax = {
 				handler(ajax.responseText);
 		}
 		if (post != undefined)
-		ajax.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded')
+			ajax.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
 		ajax.send(post != undefined ? post : null);
+	},
+	/** загрузка средствами JS */
+	loadJS: function(url, handler)
+	{
+		var s  = document.createElement('SCRIPT');
+		s.type = 'text/javascript';
+		s.src  = url;
+		ajax.jsData = []; _ = function(x) { ajax.jsData.push(x); };
+		s.onload = function()
+		{
+			handler(ajax.jsData);
+		}
+		document.body.appendChild(s);
+	},
+	/** отправка POST формы */
+	formSend: function(url, post, handler)
+	{
+		// фрейм, куда будет загружен результат
+		var frame = $('ajaxFrame');
+		if (!frame)
+		{
+			frame      = document.createElement('IFRAME');
+			frame.name = 'ajaxFrame';
+			frame.style.display = 'none';
+			$().appendChild(frame);
+		}
+		frame.onload = handler;
+		// создаем форму
+		var i, st, form = document.createElement('FORM');
+		form.action = url;
+		form.method = 'POST';
+		form.target = 'ajaxFrame';
+		form.style.display = 'none';
+		form.innerHTML = post.replace(/([^=]+)=([^&]+)(&(amp;)?)?/g, '<textarea name="$1">$2</textarea>\n');
+		$().appendChild(form);
+		// отправляем
+		form.submit();
+	},
+	/** загрузка средствами iframe */
+	loadIframe: function(url, handler)
+	{
+		var frame = document.createElement('IFRAME');
+		frame.onload = function()
+		{
+			var st = this.contentDocument.body.innerHTML;
+			st = st.replace(/^<pre>([\s\S]+?)<\/pre>.*/, '$1');
+			handler(st);
+		}
+		frame.src    = url;
+		document.body.appendChild(frame);
 	}
 };

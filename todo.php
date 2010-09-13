@@ -1,7 +1,7 @@
 <?php
 /**
- * @dateModify 11.09.10
- * @version    1.1
+ * @dateModify 13.09.10
+ * @version    1.2
  * @author     CupIvan <mail@cupivan.ru>
  */
 class todo
@@ -35,6 +35,8 @@ class todo
 	{
 		$file = @file_get_contents($fname = $this->file);
 
+		$file = preg_replace('/^_\(/m', '', $file);
+		$file = preg_replace('/\)$/m', ',', $file);
 		$file = preg_replace('/({|, )([a-z0-9]+):/', '$1"$2$3":', $file);
 		$file = json_decode("[$file 0]", TRUE);
 		array_pop($file);
@@ -54,14 +56,15 @@ class todo
 	private function save($a)
 	{
 		$a['t'] = time();
-		$params = ''; $time = date('d.m.y');
+		$time = date('d.m.y'); $id = $a['id']; unset($a['id']);
+		$params = '';
 		foreach ($a as $k => $v)
 		{
 			if (is_string($v) == 'string') $v = '"'.str_replace('"', '\"', $v).'"';
 			$params .= ", $k:$v";
 		}
 
-		if (!@file_put_contents($fname = $this->file, "{d:\"$time\"$params},\n", FILE_APPEND))
+		if (!@file_put_contents($fname = $this->file, "_({d:\"$time\", id:$id$params})\n", FILE_APPEND))
 			throw new Exception("Cannot write to file '$fname'");
 	}
 	/** максимальный идентификатор записи */
