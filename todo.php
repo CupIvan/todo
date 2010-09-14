@@ -1,7 +1,7 @@
 <?php
 /**
- * @dateModify 13.09.10
- * @version    1.2
+ * @dateModify 14.09.10
+ * @version    1.3
  * @author     CupIvan <mail@cupivan.ru>
  */
 class todo
@@ -90,7 +90,7 @@ class todo
 	/** добавление новой туду */
 	public function add($a)
 	{
-		if (!isset($a['m'])) throw new Exception("empty message");
+		if (!isset($a['m']) || $a['m'] == '') throw new Exception("empty message");
 		$a['id'] = $this->getMaxId() + 1;
 		$a['s']  = isset($a['s']) ? strtoupper($a['s']) : 'IDEA';
 		$this->list[] = $a;
@@ -130,3 +130,4 @@ class todo
 		return $res;
 	}
 }
+
