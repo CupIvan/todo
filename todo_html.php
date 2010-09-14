@@ -3,9 +3,9 @@ if (!isset($_POST['action'])) exit;
 
 switch ($_GET['site'])
 {
-	case 'si':    chdir('../sadowajaimperija/'); break;
-	case 'mff':   chdir('../myfreefarm/');       break;
-	case 'kupon': chdir('../kupon/');            break;
+	case 'sadowajaimperija': chdir('../sadowajaimperija/'); break;
+	case 'myfreefarm':       chdir('../myfreefarm/');       break;
+	case 'kupon':            chdir('../kupon/');            break;
 	default: exit;
 }
 
