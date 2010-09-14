@@ -1,6 +1,6 @@
 	/**
  * @dateModify 14.09.10
- * @version    1.1
+ * @version    1.2
  * @author CupIvan <mail@cupivan.ru>
  */
 var todo = {}
@@ -134,8 +134,18 @@ todo.showTable = function(link)
 		vote2 = 'против ' + todo.list[i].n2;
 		if (link.href.indexOf('#completed') == -1)
 		{
-			vote1 = '<a href="#vote" onclick="return todo.sendVote('+i+', \'n1\', this)" title="Голосовать за">'+vote1+'</a>';
-			vote2 = '<a href="#vote" onclick="return todo.sendVote('+i+', \'n2\', this)" title="Голосовать против">'+vote2+'</a>';
+			if ($_COOKIE['vote'+i])
+			{
+				if ($_COOKIE['vote'+i] == 'n1')
+					vote1 = '<b title="Я тоже за">' + vote1 + '</b>';
+				else
+					vote2 = '<b title="Я тоже против">' + vote2 + '</b>';
+			}
+			else
+			{
+				vote1 = '<a href="#vote" onclick="return todo.sendVote('+i+', \'n1\', this)" title="Голосовать за">'+vote1+'</a>';
+				vote2 = '<a href="#vote" onclick="return todo.sendVote('+i+', \'n2\', this)" title="Голосовать против">'+vote2+'</a>';
+			}
 		}
 		st += '<tr>'+
 			'<td><span class="vote">'+ vote1 + '<br/>' + vote2 + '</span></td>'+
@@ -174,8 +184,9 @@ todo.sendVote = function(id, vote, link)
 	// TODO: два раза голосовать нельзя!
 	var post = 'action=vote&id=' + id + '&vote=' + vote + todo.getParams();
 	ajax.load(todo.action, post);
+	setcookie('vote'+id, vote);
 	todo.list[id][vote]++;
-	link.innerHTML = link.innerHTML.replace(/(\d+)/, todo.list[id][vote]);
+	link.parentNode.innerHTML = vote=='n1' ? 'я за' : 'я против';
 	return false;
 }
 
@@ -322,4 +333,23 @@ var ajax = {
 		document.body.appendChild(frame);
 	}
 };
-
+/** установка куки */
+function setcookie(name, value, expires, path, domain, secure)
+{
+	if (expires) expires = (new Date()).setTime(expires);
+	document.cookie = name + "=" + escape(value) +
+		((expires) ? "; expires=" + expires.toGMTString() : "") +
+		((path)    ? "; path="    + path : "") +
+		((domain)  ? "; domain="  + domain : "") +
+		((secure)  ? "; secure" : "");
+	updatecookies();
+}
+/** получение куки */
+function updatecookies() {
+	var cookie = '' + document.cookie + ';';
+	var reg    = /([^= ]+)=([^;]+);/g, res;
+	$_COOKIE   = {};
+	while ((res = reg.exec(cookie)) != null)
+		$_COOKIE[res[1]] = res[2];
+}
+$_COOKIE = {}; updatecookies();

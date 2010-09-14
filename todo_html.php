@@ -28,6 +28,6 @@ switch($_POST['action'])
 		$t = $todo->get($id);
 		$params[$nn] = $t[$nn] + 1;
 		$todo->edit($params);
+		setcookie("vote$id", $nn=='n1' ? 1 : -1);
 		break;
 }
-
