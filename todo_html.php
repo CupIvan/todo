@@ -23,11 +23,12 @@ switch($_POST['action'])
 		$todo->add($params);
 		break;
 	case 'vote':
-		$id = $_POST['id'];
-		$nn = $_POST['vote']; unset($_POST['vote']);
+		$id = $params['id'];
+		$nn = $params['vote']; unset($params['vote']);
 		$t = $todo->get($id);
 		$params[$nn] = $t[$nn] + 1;
 		$todo->edit($params);
 		setcookie("vote$id", $nn=='n1' ? 1 : -1);
 		break;
 }
+
