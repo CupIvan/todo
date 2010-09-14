@@ -1,6 +1,6 @@
 	/**
  * @dateModify 14.09.10
- * @version    1.2
+ * @version    1.3
  * @author CupIvan <mail@cupivan.ru>
  */
 var todo = {}
@@ -27,7 +27,7 @@ todo.init = function(cfg_)
 		border: cfg.border;
 		position: fixed; cfg.side; top: 100%; margin-top: -cfg.offsetBottom;
 		width: 22px; height: 151px;
-		background: cfg.color URL('http://cupivan.su/todo/tab.png');
+		background: cfg.color URL('http://cupivan.ru/todo/tab.png');
 	}
 	#todoWindow {
 		position: fixed; left: 50%; top: 50%; margin-left: -400px; margin-top: -250px; z-index: 999;
