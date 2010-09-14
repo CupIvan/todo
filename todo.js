@@ -1,6 +1,6 @@
 	/**
- * @dateModify 13.09.10
- * @version    1.0
+ * @dateModify 14.09.10
+ * @version    1.1
  * @author CupIvan <mail@cupivan.ru>
  */
 var todo = {}
@@ -173,10 +173,9 @@ todo.sendVote = function(id, vote, link)
 {
 	// TODO: два раза голосовать нельзя!
 	var post = 'action=vote&id=' + id + '&vote=' + vote + todo.getParams();
-	ajax.load(todo.action, post, function(x){
-		todo.list[id][vote] = x;
-		link.innerHTML = link.innerHTML.replace(/(\d+)/, x);
-	});
+	ajax.load(todo.action, post);
+	todo.list[id][vote]++;
+	link.innerHTML = link.innerHTML.replace(/(\d+)/, todo.list[id][vote]);
 	return false;
 }
 
@@ -323,3 +322,4 @@ var ajax = {
 		document.body.appendChild(frame);
 	}
 };
+

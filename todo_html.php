@@ -24,9 +24,10 @@ switch($_POST['action'])
 		break;
 	case 'vote':
 		$id = $_POST['id'];
-		$nn = $_POST['vote'];
+		$nn = $_POST['vote']; unset($_POST['vote']);
 		$t = $todo->get($id);
-		$todo->edit(array('id' => $_POST['id'], $nn => $n = $t[$nn] + 1));
-		echo $n;
+		$params[$nn] = $t[$nn] + 1;
+		$todo->edit($params);
 		break;
 }
+
