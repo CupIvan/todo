@@ -1,7 +1,7 @@
 <?php
 /**
- * @dateModify 14.09.10
- * @version    1.3
+ * @dateModify 16.09.10
+ * @version    1.4
  * @author     CupIvan <mail@cupivan.ru>
  */
 class todo
@@ -113,8 +113,8 @@ class todo
 	{
 		if (!isset($this->list[$id])) throw new Exception("#$id no found");
 		$s = $this->list[$id]['s'];
-		if (($s == 'TODO' && $state != 'DONE') ||
-			($s == 'BUG'  && $state != 'FIX')) throw new Exception("#$id cannot change state $s to $state");
+		if ((($s == 'TODO' || $s == 'IDEA')    && $state != 'DONE') ||
+			(($s == 'BUG'  || $s == 'PROBLEM') && $state != 'FIX')) throw new Exception("#$id cannot change state $s to $state");
 		if ($state == $this->list[$id]['s'])   throw new Exception("#$id already $state");
 		$this->save(array('id' => $id, 's' => $state));
 		return $id;
