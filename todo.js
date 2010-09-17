@@ -1,6 +1,6 @@
 	/**
- * @dateModify 14.09.10
- * @version    1.3
+ * @dateModify 18.09.10
+ * @version    1.4
  * @author CupIvan <mail@cupivan.ru>
  */
 var todo = {}
@@ -19,59 +19,58 @@ todo.init = function(cfg_)
 	todo.params = cfg.params;
 
 	// создаем HTML-код таба и формы
-	var div = document.createElement('DIV');
-	div.id  = 'todo';
-	div.innerHTML = <r><![CDATA[
-<style>
-	#todo .tab {
-		border: cfg.border;
-		position: fixed; cfg.side; top: 100%; margin-top: -cfg.offsetBottom;
-		width: 22px; height: 151px;
-		background: cfg.color URL('http://cupivan.ru/todo/tab.png');
-	}
-	#todoWindow {
-		position: fixed; left: 50%; top: 50%; margin-left: -400px; margin-top: -250px; z-index: 999;
-		width: 800px; height: 500px; scroll; padding: 20px;
-		background: #FFF;
-		border: 2px solid #FFA000;
-		-moz-border-radius: 20px;
-	}
-	#todoWindow .close {
-		float: right; width: 20px; height: 20px; margin: -10px -10px 0 0;
-		border: 2px solid #FFA000; -moz-border-radius: 20px;
-		text-align: center; text-decoration: none; color: #FFA000; font: bold 17px Courier;
-	}
-	#todoWindow .close:hover { color: #FFF; background: #FFA000; }
-	#todoWindow form { padding: 10px 0; }
-	#todoWindow form .text { width: 700px; }
-	#todoWindow .todoTypes a     { padding: 2px 15px; border: 1px solid #FFA000; text-decoration: none; color: #000; }
-	#todoWindow .todoTypes a.act { background: #FFA000; }
-	#todoTable    { overflow: auto; height: 390px; margin-top: 20px; }
-	#todoTable table { border-collapse: collapse; }
-	#todoTable td { text-align: center; border: 1px solid #FFA000; padding: 2px 10px; }
-	#todoTable .l { text-align: left; }
-	#todoTable .vote a { display: inline-block; width: 100%; background: #FFEEEE; font: 14px Verdana; }
-</style>
-<a href="#showWindow" onclick="return todo.togle()" class="tab"></a>
-<div id="todoWindow">
-	<a href="#close" onclick="return todo.togle()" title="Закрыть" class="close">x</a>
-	<form onsubmit="return todo.sendTodo(this)">
-		<label><input name="type" type="radio" value="PROBLEM" checked="checked" />Ошибка</label>
-		<label><input name="type" type="radio" value="IDEA" />Предложение</label>
-		<br/>
-		<input name="text" class="text" />
-		<input value="Добавить" type="submit" />
-	</form>
-	<div class="todoTypes">
-		<a href="#tasks"     onclick="return todo.showTable(this)">Предложения</a>
-		<a href="#bugs"      onclick="return todo.showTable(this)">Ошибки</a>
-		<a href="#completed" onclick="return todo.showTable(this)">Выполненные</a>
-	</div>
-	<div id="todoTable"></div>
-</div>
-]]></r>;
-	for (i in cfg) div.innerHTML = div.innerHTML.replace('cfg.'+i, cfg[i]);
-	$().appendChild(div);
+	var content = '\
+<style>\
+	#todo .tab {\
+		border: cfg.border; width: 22px; height: 151px;\
+		position: fixed; cfg.side; top: 100%; margin-top: -cfg.offsetBottom;\
+		background: cfg.color URL("http://cupivan.ru/todo/tab.png");\
+	}\
+	#todoWindow {\
+		position: fixed; z-index: 999;\
+		left: 50%; top: 50%; margin-left: -400px; margin-top: -200px;\
+		width: 800px; height: 400px; scroll; padding: 20px;\
+		background: #FFF;\
+		border: 2px solid #FFA000;\
+		-moz-border-radius: 20px;\
+	}\
+	#todoWindow .close {\
+		float: right; width: 20px; height: 20px; margin: -10px -10px 0 0;\
+		border: 2px solid #FFA000; -moz-border-radius: 20px;\
+		text-align: center; text-decoration: none; color: #FFA000; font: bold 17px Courier;\
+	}\
+	#todoWindow .close:hover { color: #FFF; background: #FFA000; }\
+	#todoWindow form { padding: 10px 0; }\
+	#todoWindow form .text { width: 700px; }\
+	#todoWindow .todoTypes a     { padding: 2px 15px; border: 1px solid #FFA000; text-decoration: none; color: #000; }\
+	#todoWindow .todoTypes a.act { background: #FFF9EF; }\
+	#todoTable    { overflow: auto; height: 300px; margin-top: 20px; }\
+	#todoTable table { width: 100%; border-collapse: collapse; background: #FFF3DF; }\
+	#todoTable td    { text-align: center; border: 1px solid #FFA000; padding: 2px 10px; }\
+	#todoTable .text { text-align: left; width: 100%; }\
+	#todoTable .vote a { display: inline-block; width: 100%; background: #FFEEEE; font: 14px Verdana; }\
+</style>\
+<div id="todo">\
+<a href="#showWindow" onclick="return todo.togle()" class="tab"></a>\
+<div id="todoWindow">\
+	<a href="#close" onclick="return todo.togle()" title="Закрыть" class="close">x</a>\
+	<form onsubmit="return todo.sendTodo(this)">\
+		<label><input name="type" type="radio" value="PROBLEM" checked="checked" />Ошибка</label>\
+		<label><input name="type" type="radio" value="IDEA" />Предложение</label>\
+		<br/>\
+		<input name="text" class="text" />\
+		<input value="Добавить" type="submit" />\
+	</form>\
+	<div class="todoTypes">\
+		<a href="#tasks"     onclick="return todo.showTable(this)">Предложения</a>\
+		<a href="#bugs"      onclick="return todo.showTable(this)">Ошибки</a>\
+		<a href="#completed" onclick="return todo.showTable(this)">Выполненные</a>\
+	</div>\
+	<div id="todoTable"></div>\
+</div></div>';
+	for (i in cfg) content = content.replace('cfg.'+i, cfg[i]);
+	document.write(content);
+
 	todo.togle(); // скрываем
 	todo.load();
 }
@@ -150,7 +149,7 @@ todo.showTable = function(link)
 		st += '<tr>'+
 			'<td><span class="vote">'+ vote1 + '<br/>' + vote2 + '</span></td>'+
 			'<td>#'+todo.list[i].id+'</td>'+
-			'<td class="l">'+todo.list[i].m.replace(/</g, '&lt;').replace(/>/g, '&gt;')+'</td>'+
+			'<td class="text">'+todo.list[i].m.replace(/</g, '&lt;').replace(/>/g, '&gt;')+'</td>'+
 			'<td>'+(todo.list[i].v ? 'v'+todo.list[i].v+'<br/>' : '') +
 				todo.list[i].d +
 				('TODO|BUG'.indexOf(todo.list[i].s) != -1 ? '<br/>принято' : '') +
@@ -181,7 +180,6 @@ todo.sendTodo = function(form)
 /** отправка голоса */
 todo.sendVote = function(id, vote, link)
 {
-	// TODO: два раза голосовать нельзя!
 	var post = 'action=vote&id=' + id + '&vote=' + vote + todo.getParams();
 	ajax.load(todo.action, post);
 	setcookie('vote'+id, vote);
@@ -282,17 +280,24 @@ var ajax = {
 			ajax.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
 		ajax.send(post != undefined ? post : null);
 	},
+	/** установка .onload, из-за IE отдельная функция >:-[ */
+	setOnload: function(e, handler)
+	{
+		e.onload = handler; // для нормальных браузеров
+		if (!-[1,]) // сработет только для IE
+		e.onreadystatechange = function() {
+			if ('loaded|complete'.indexOf(this.readyState) != -1) handler();
+		};
+	},
 	/** загрузка средствами JS */
 	loadJS: function(url, handler)
 	{
-		var s  = document.createElement('SCRIPT');
+		var s  = document.createElement('SCRIPT'), i;
 		s.type = 'text/javascript';
 		s.src  = url;
-		ajax.jsData = []; _ = function(x) { ajax.jsData.push(x); };
-		s.onload = function()
-		{
-			handler(ajax.jsData);
-		}
+		ajax.jsData = [];
+		_ = function(x) { ajax.jsData.push(x);  } // через эту функцию JS-файл может передавать инфу
+		ajax.setOnload(s, function() { handler(ajax.jsData); });
 		document.body.appendChild(s);
 	},
 	/** отправка POST формы */
@@ -307,7 +312,8 @@ var ajax = {
 			frame.style.display = 'none';
 			$().appendChild(frame);
 		}
-		frame.onload = handler;
+		ajax.setOnload(frame, handler);
+
 		// создаем форму
 		var i, st, form = document.createElement('FORM');
 		form.action = url;
