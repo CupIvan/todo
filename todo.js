@@ -1,6 +1,6 @@
 	/**
  * @dateModify 18.09.10
- * @version    1.4
+ * @version    1.5
  * @author CupIvan <mail@cupivan.ru>
  */
 var todo = {}
@@ -69,7 +69,14 @@ todo.init = function(cfg_)
 	<div id="todoTable"></div>\
 </div></div>';
 	for (i in cfg) content = content.replace('cfg.'+i, cfg[i]);
-	document.write(content);
+	if (!-[1,]) // IE, чтоб его, нихрена не умеет, пришлось извращаться >:-[
+		document.write(content); // так нельзя делать, если страница уже загрузилась
+	else // для нормальныхх браузеров
+	{
+		var div = document.createElement('DIV');
+		div.innerHTML = content;
+		$().appendChild(div);
+	}
 
 	todo.togle(); // скрываем
 	todo.load();
