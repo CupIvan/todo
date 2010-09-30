@@ -1,7 +1,7 @@
 <?php
 /**
- * @dateModify 16.09.10
- * @version    1.4
+ * @dateModify 30.09.10
+ * @version    1.5
  * @author     CupIvan <mail@cupivan.ru>
  */
 class todo
@@ -82,9 +82,10 @@ class todo
 	{
 		if (!count($this->list)) echo "No todo found\n";
 		for ($i = 1; $i < count($this->list); $i++)
-		if (isset($this->list[$i]['s']) && $this->list[$i]['s'] != 'FIX' && $this->list[$i]['s'] != 'DONE')
+		if (isset($this->list[$i]['s']) && $this->list[$i]['s'] != 'FIX' &&
+			$this->list[$i]['s'] != 'DONE' && $this->list[$i]['s'] != 'DELETE')
 		{
-			printf("%5s #%2d %s\n", $this->list[$i]['s'], $this->list[$i]['id'], $this->list[$i]['m']);
+			printf("%7s #%2d %s\n", $this->list[$i]['s'], $this->list[$i]['id'], $this->list[$i]['m']);
 		}
 	}
 	/** добавление новой туду */
@@ -103,10 +104,17 @@ class todo
 		$a['id'] = (int)$a['id']; $n = -1;
 		for ($i = 0; $i < count($this->list); $i++)
 			if ($this->list[$i]['id'] == $a['id']) $n = $i;
-		if ($n < 0) throw new Exception("todo #$id not found");
+		if ($n < 0) throw new Exception("#$id not found");
 		$this->list[] = $a;
 		$this->save($a);
 		return $a['id'];
+	}
+	/** удаление тудушки */
+	public function delete($id)
+	{
+		if (!isset($this->list[$id])) throw new Exception("#$id no found");
+		$this->save(array('id' => $id, 's' => 'DELETE'));
+		return $id;
 	}
 	/** туду выполнено */
 	public function done($id, $state = 'DONE')

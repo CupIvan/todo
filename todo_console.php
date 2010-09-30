@@ -51,10 +51,11 @@ try {
 	switch ($argv[1])
 	{
 		case 'list':  $todo->show(); break;
-		case 'add':   $n = $todo->add($params);                     echo "#$n added\n"; break;
+		case 'add':   $n = $todo->add($params);                     echo "#$n added\n";    break;
 		case 'edit':  $n = $todo->edit($argv[2], $params);          echo "#$n modified\n"; break;
-		case 'done':  $n = $todo->done($id = (int)$argv[2]);        echo "#$id done\n";  break;
-		case 'fix':   $n = $todo->done($id = (int)$argv[2], 'FIX'); echo "#$id fixed\n"; break;
+		case 'done':  $n = $todo->done($id = (int)$argv[2]);        echo "#$id done\n";    break;
+		case 'delete':$n = $todo->delete($id = (int)$argv[2]);      echo "#$id deleted\n"; break;
+		case 'fix':   $n = $todo->done($id = (int)$argv[2], 'FIX'); echo "#$id fixed\n";   break;
 		default: help();
 	}
 }

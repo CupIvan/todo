@@ -1,6 +1,6 @@
 	/**
- * @dateModify 18.09.10
- * @version    1.5
+ * @dateModify 30.09.10
+ * @version    1.6
  * @author CupIvan <mail@cupivan.ru>
  */
 var todo = {}
@@ -31,8 +31,8 @@ todo.init = function(cfg_)
 		left: 50%; top: 50%; margin-left: -400px; margin-top: -200px;\
 		width: 800px; height: 400px; scroll; padding: 20px;\
 		background: #FFF;\
-		border: 2px solid #FFA000;\
-		-moz-border-radius: 20px;\
+		border: 2px solid #FFA000; -moz-border-radius: 20px;\
+		font: auto;\
 	}\
 	#todoWindow .close {\
 		float: right; width: 20px; height: 20px; margin: -10px -10px 0 0;\
@@ -42,6 +42,7 @@ todo.init = function(cfg_)
 	#todoWindow .close:hover { color: #FFF; background: #FFA000; }\
 	#todoWindow form { padding: 10px 0; }\
 	#todoWindow form .text { width: 700px; }\
+	#todoWindow input { border: 2px inset threedface; background: none; font: auto !important; }\
 	#todoWindow .todoTypes a     { padding: 2px 15px; border: 1px solid #FFA000; text-decoration: none; color: #000; }\
 	#todoWindow .todoTypes a.act { background: #FFF9EF; }\
 	#todoTable    { overflow: auto; height: 300px; margin-top: 20px; }\
@@ -52,7 +53,8 @@ todo.init = function(cfg_)
 </style>\
 <div id="todo">\
 <a href="#showWindow" onclick="return todo.togle()" class="tab"></a>\
-<div id="todoWindow">\
+<iframe id="todoWindow" onload="this.contentDocument.body = \'asw\'"></iframe>\
+<div id="todoWindowContent">\
 	<a href="#close" onclick="return todo.togle()" title="Закрыть" class="close">x</a>\
 	<form onsubmit="return todo.sendTodo(this)">\
 		<label><input name="type" type="radio" value="PROBLEM" checked="checked" />Ошибка</label>\
@@ -69,6 +71,7 @@ todo.init = function(cfg_)
 	<div id="todoTable"></div>\
 </div></div>';
 	for (i in cfg) content = content.replace('cfg.'+i, cfg[i]);
+	content = content.replace(/}/, "}\n"); // переносы строк для удобочитаемости
 	if (!-[1,]) // IE, чтоб его, нихрена не умеет, пришлось извращаться >:-[
 		document.write(content); // так нельзя делать, если страница уже загрузилась
 	else // для нормальныхх браузеров
@@ -77,6 +80,8 @@ todo.init = function(cfg_)
 		div.innerHTML = content;
 		$().appendChild(div);
 	}
+	$('todoWindow').contentDocument.body.innerHTML = $('todoWindowContent').innerHTML;
+	style('todoWindowContent', 'display: none');
 
 	todo.togle(); // скрываем
 	todo.load();
@@ -209,7 +214,7 @@ function $$(st) // $$("#id .class tag")
 		for (j = 0; j < els.length; j++)
 		{
 			if (st[i][0] == '#')
-				e = els[j].getElementById(st[i].replace(/./, ''));
+				e = [els[j].getElementById(st[i].replace(/./, ''))];
 			else
 			if (st[i][0] == '.')
 				e = els[j].getElementsByClassName(st[i].replace(/./, ''));
